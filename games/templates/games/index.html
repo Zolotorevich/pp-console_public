@@ -1,0 +1,170 @@
+{% extends "console/base.html" %}
+{% load static %}
+
+{% block title %}
+	Games / Await
+{% endblock %}
+
+{% block head %}
+<style>
+	form img {
+		width:300px;
+	}
+
+	video {
+		width: 600px;
+		margin-bottom: 40px;
+	}
+
+	#image_magnify {
+		position: fixed;
+		top: 0;
+		right: 0 !important;
+		width: 800px !important;
+		display: none;
+	}
+
+	textarea {
+		min-height: 220px;
+	}
+</style>
+
+<script>
+	window.addEventListener("load", (event) => {
+
+		const magnifier = document.getElementById('image_magnify');
+		const hugeImg = document.querySelector('#image_magnify img');
+
+		document.querySelectorAll('form img').forEach(img => {
+			img.addEventListener('mouseover', () => {
+				magnifier.style.display = 'block';
+				hugeImg.src = img.src;
+			});
+
+			img.addEventListener('mouseout', () => {
+				magnifier.style.display = 'none';
+			});
+		});
+		
+	});
+	
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+	<div id="image_magnify">
+		<img src="1.jpg" alt="">
+	</div>
+
+	{% if message_fail %}
+		<main class="container">
+			<mark>Error: {{ message_fail }}</mark>
+		</main>
+		<hr/>
+	{% endif %}
+
+	{% if message_done %}
+		<main class="container">
+			<ins>Send: {{ message_done }}</ins>
+		</main>
+		<hr/>
+	{% endif %}
+
+	{% for game in await_games %}
+
+		<main class="container">
+			
+			<form action="{% url 'games:send' game.id %}" method="post">
+				{% csrf_token %}
+
+				<input type="text" id="title" name="title" placeholder="Game title" value="{{ game.title }}" required>
+
+				<input type="text" id="genre" name="genre" placeholder="Genres" value="{{ game.genre }}" required>
+
+				<textarea name="description" required>{{ game.description }}</textarea>
+
+				<details>
+					<summary>Original text</summary>
+					{{ game.rawText|linebreaks }}
+				</details>
+
+				<label for="cpu">
+					System requirements: CPU, GPU, RAM
+					<input type="text" id="cpu" name="cpu" placeholder="CPU" value="{{ game.sysCPU }}">
+				</label>
+				<input type="text" id="gpu" name="gpu" placeholder="GPU" value="{{ game.sysGPU }}">
+				
+				<div class="grid">
+					<input type="text" id="ram" name="ram" placeholder="RAM" value="{{ game.sysRAM }}">
+					<div></div>
+					<div></div>
+				</div>
+				
+				<div class="grid">
+					<label for="rating_gamers">
+						Gamers rating
+						<input type="text" id="rating_gamers" name="ratingGamers" placeholder="" value="{% if game.ratingUsers %}{{ game.ratingUsers }}{% endif %}">
+					</label>
+					<label for="rating_critics">
+						Critics
+						<input type="text" id="rating_critics" name="ratingCritics" placeholder="" value="{% if game.ratingCritics %}{{ game.ratingCritics }}{% endif %}">
+					</label>
+					<div></div>
+				</div>
+
+				<video preload="none" controls>
+					<source src="/media/video/{{ game.videoFilename }}" type="video/mp4">
+				</video>
+
+				<input type="text" id="ram" name="videoFilename" placeholder="videoFilename" value="{{ game.videoFilename }}" style="display:none;">
+
+				<fieldset>
+					<div class="grid">
+
+						{% for image in game.screenshots_list %}
+							<label for="{{ image }}">
+								<input type="checkbox" id="{{ image }}" name="screenshots" value="{{ image }}">
+								<img src="/media/images/{{ image }}" alt="">
+							</label>
+						{% endfor %}
+
+					</div>
+				</fieldset>
+
+				<div class="grid">
+					<button type="submit">&nbsp;</button>
+					<div></div>
+					<div></div>
+				</div>
+
+				<div class="grid">
+					<div>
+						<a href="{{ game.url }}" class="secondary">Torrent page</a>
+						• 
+						<a href="https://www.metacritic.com/search/game/{{ game.title }}/results?sort=recent&plats[3]=1&search_type=advanced" class="secondary">Metacritic</a>
+					</div>
+					<div></div>
+					<div style="text-align: right;"><a href="{% url 'games:reject' game.id %}" class="secondary">Reject</a></div>
+				</div>
+			
+			</form>
+			
+		</main>
+
+		<hr/>
+
+	{% empty %}
+
+		<main class="container">
+			<ins>No awaiting games</ins>
+		</main>
+
+	{% endfor %}
+
+	<main class="container">
+		<ins>END</ins>
+	</main>
+
+{% endblock %}

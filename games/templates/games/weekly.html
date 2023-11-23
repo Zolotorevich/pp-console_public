@@ -1,0 +1,143 @@
+{% extends "console/base.html" %}
+{% load static %}
+
+{% block head %}
+<script>
+	$(document).ready(function () {
+
+		var csrf_token = "{{ csrf_token }}";
+
+		$(document).on('click', '#submit-btn', function(event){
+			var response_data = []
+
+			var games = []
+			var game_objects = $('.gameDescription');
+			for(i=0;i<game_objects.length;i++){
+				var id = $(game_objects[i]).attr('id');
+				var description = $(game_objects[i]).val();
+				var game_data = {
+					"id": id,
+					"description": description,
+				}
+				games.push(game_data);
+			}
+
+			var screens = []
+			var screens_objects = $('.screenshot');
+			for(i=0;i<screens_objects.length;i++){
+				if (screens_objects[i].checked) {
+					var filename = $(screens_objects[i]).attr('id');
+					screens.push(filename);
+				}
+			}
+
+			response_data.push(games)
+			response_data.push(screens)
+
+			console.log(response_data)
+			$.ajax({
+				type: "POST",
+				url: "../sendweekly/",
+				headers: {'X-CSRFToken': csrf_token},
+				data: {'data': JSON.stringify(response_data)},
+				dataType: 'json',
+				success: function(response){
+					$('#submit-btn').attr('disabled','disabled');
+					$('#submit-btn').html("Success " + screens_counter + " images");
+				}
+			});
+			
+		});
+
+		var screens_counter = 0
+		$(document).on('click', '.screenshot', function(event){
+			if (this.checked) {
+				screens_counter++;
+			} else {
+				screens_counter--;
+			}
+
+			$('#submit-btn').html(screens_counter);
+
+			if (screens_counter > 10) {
+				$('#submit-btn').attr('disabled','disabled');
+			} else {
+				$('#submit-btn').removeAttr('disabled');
+			}
+		});
+
+	
+	});
+	
+</script>
+
+{% endblock %}
+
+{% block title %}
+	Games / Weekly
+{% endblock %}
+
+{% block content %}
+
+<main class="container">
+
+	{% if weekly_games %}
+			
+		<form action="{% url 'games:sendweekly' %}" method="post">
+			{% csrf_token %}
+
+			{% for game in weekly_games %}
+
+				<a href="https://t.me/flint_games/{{ game.weekly.messageID }}">{{ game.title }}</a>
+
+				{% if not game.weekly.messageID %}
+				 • No message ID
+				{% endif %}
+
+				{% if game.weekly.description %}
+					
+					<input type="text" class="gameDescription" id="{{ game.weekly.id }}" name="description" placeholder="Game description" value="{{ game.weekly.description }}" required>
+					
+				{% else %}
+
+					<input type="text" class="gameDescription" id="{{ game.weekly.id }}" name="description" placeholder="Game description" value="{{ game.genre }}" required>
+
+				{% endif %}
+
+				<fieldset>
+					<div class="grid">
+
+						{% for image in game.selected_screenshots %}
+							<label for="{{ image }}">
+								<input type="checkbox" id="{{ image }}" class="screenshot" name="screenshots" value="{{ image }}">
+								<img src="/media/images/{{ image }}" alt="">
+							</label>
+						{% endfor %}
+
+					</div>
+				</fieldset>
+				
+
+				<hr/>
+			
+			{% endfor %}
+
+		</form>
+
+		<div class="grid">
+			<button type="submit" id="submit-btn" value="0">0</button>
+			<div><span id="success" style="display:none">Success<span></div>
+			<div></div>
+		</div>
+	
+	{% else %}
+
+		<div>
+			<ins>No weekly games</ins>
+		</div>
+	
+	{% endif %}
+				
+	</main>
+
+{% endblock %}

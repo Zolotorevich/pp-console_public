@@ -1,0 +1,21 @@
+{% extends "console/base.html" %}
+{% load static %}
+
+{% block title %}
+	PP • Console
+{% endblock %}
+
+{% block content %}
+
+<main class="container">
+	<form method="post">
+		{% csrf_token %}
+		<div class="grid">
+			{{ form.username }}
+			{{ form.password }}			
+			<button type="submit">Login</button>
+		</div>
+	</form>
+</main>
+
+{% endblock %}
