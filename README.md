@@ -3,7 +3,7 @@
 
 Внутри: Django + Q2, Telethon, moviepy, Ubuntu + MySQL + Apache.
 
-Зачем: zolotorevich.com/works/pirate-parrot/crawler/
+Зачем: www.zolotorevich.com/works/pirate-parrot/crawler/
 
 ## games
 Показывает информацию об играх и список игра за неделю
